@@ -1,10 +1,17 @@
+
+import { useNavigate } from 'react-router-dom';
 import AuthForm from '../components/authform';
 import AuthToggle from '../components/AuthToggler';
 
 export default function Login() {
+  const navigate = useNavigate();
+//  lógica de login
   const handleSubmit = (data) => {
     console.log('Login:', data);
-    // lógica de autenticação 
+    
+    if (data.email && data.password) {
+      navigate('/dashboard'); 
+    }
   };
 
   return (
