@@ -7,10 +7,12 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const CreateProduct = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [fornecedores, setFornecedores] = useState([]);
   const [formData, setFormData] = useState({
     codigo: '',
     nome: '',
     categoria_id: '',
+    fornecedor_id: '',
     quantidade_estoque: '',
     valor: '',
     descricao: '',
@@ -18,20 +20,22 @@ const CreateProduct = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/categories`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setCategories(response.data.data || response.data);
+        const [categoriesRes, fornecedoresRes] = await Promise.all([
+          axios.get(`${API_URL}/categories`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/fornecedor`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        setCategories(categoriesRes.data.data || categoriesRes.data);
+        setFornecedores(fornecedoresRes.data.data || []);
       } catch (err) {
-        setError('Erro ao carregar categorias');
+        setError('Erro ao carregar dados');
         console.error(err);
       }
     };
 
-    fetchCategories();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -51,7 +55,8 @@ const CreateProduct = () => {
         codigo: parseInt(formData.codigo),
         quantidade_estoque: parseInt(formData.quantidade_estoque),
         valor: parseFloat(formData.valor),
-        categoria_id: parseInt(formData.categoria_id)
+        categoria_id: parseInt(formData.categoria_id),
+        fornecedor_id: parseInt(formData.fornecedor_id)
       };
 
       await axios.post(`${API_URL}/products`, productData, {
@@ -60,7 +65,7 @@ const CreateProduct = () => {
 
       navigate('/dashboard');
     } catch (err) {
-      setError('Erro ao cadastrar produto');
+      setError('Erro ao cadastrar produto. Verifique se o fornecedor está selecionado.');
       console.error(err);
     }
   };
@@ -110,6 +115,30 @@ const CreateProduct = () => {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="fornecedor_id">Fornecedor:</label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <select
+              id="fornecedor_id"
+              name="fornecedor_id"
+              value={formData.fornecedor_id}
+              onChange={handleChange}
+              required
+              style={{ flex: 1 }}
+            >
+              <option value="">Selecione um fornecedor</option>
+              {fornecedores.map(fornecedor => (
+                <option key={fornecedor.id} value={fornecedor.id}>
+                  {fornecedor.nome}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={() => navigate('/fornecedores/novo')} className="btn btn-secondary">
+              Novo
+            </button>
+          </div>
         </div>
 
         <div className="form-group">
